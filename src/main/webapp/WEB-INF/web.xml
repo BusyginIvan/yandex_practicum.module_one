@@ -21,6 +21,13 @@
             <param-value>ru.yandex.practicum.configuration.WebConfiguration</param-value>
         </init-param>
 
+        <multipart-config>
+            <location>/tmp</location>
+            <max-file-size>5242880</max-file-size> <!-- 5MB -->
+            <max-request-size>5242880</max-request-size>
+            <file-size-threshold>0</file-size-threshold>
+        </multipart-config>
+
         <load-on-startup>1</load-on-startup>
     </servlet>
 

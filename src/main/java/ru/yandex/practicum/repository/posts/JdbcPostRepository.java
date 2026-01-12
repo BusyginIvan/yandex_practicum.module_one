@@ -4,7 +4,7 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
-import ru.yandex.practicum.domain.Post;
+import ru.yandex.practicum.entity.posts.PostEntity;
 import ru.yandex.practicum.exception.PostNotFoundException;
 
 import java.util.List;
@@ -14,7 +14,7 @@ import java.util.Optional;
 @Repository
 public class JdbcPostRepository implements PostRepository {
 
-    private static final RowMapper<Post> POST_ROW_MAPPER = (rs, rowNum) -> new Post(
+    private static final RowMapper<PostEntity> POST_ROW_MAPPER = (rs, rowNum) -> new PostEntity(
             rs.getLong("id"),
             rs.getString("title"),
             rs.getString("text"),
@@ -41,7 +41,7 @@ public class JdbcPostRepository implements PostRepository {
     }
 
     @Override
-    public Optional<Post> findById(long id) {
+    public Optional<PostEntity> findById(long id) {
         String sql = """
                 SELECT id, title, text, likes_count
                 FROM posts
@@ -74,7 +74,7 @@ public class JdbcPostRepository implements PostRepository {
     }
 
     @Override
-    public List<Post> searchPage(String search, int offset, int limit) {
+    public List<PostEntity> searchPage(String search, int offset, int limit) {
         String sql = """
                 SELECT id, title, text, likes_count
                 FROM posts

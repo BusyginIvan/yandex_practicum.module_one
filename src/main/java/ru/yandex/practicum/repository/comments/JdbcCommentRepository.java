@@ -1,11 +1,13 @@
 package ru.yandex.practicum.repository.comments;
 
 import org.springframework.jdbc.core.RowMapper;
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.domain.Comment;
 import ru.yandex.practicum.exception.CommentNotFoundException;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -81,5 +83,35 @@ public class JdbcCommentRepository implements CommentRepository {
             """;
         int updated = jdbc.update(sql, Map.of("postId", postId, "commentId", commentId));
         if (updated == 0) throw new CommentNotFoundException(postId, commentId);
+    }
+
+    @Override
+    public int countByPostId(long postId) {
+        String sql = "SELECT COUNT(*) FROM comments WHERE post_id = :postId";
+        Integer count = jdbc.queryForObject(sql, Map.of("postId", postId), Integer.class);
+        return count == null ? 0 : count;
+    }
+
+    @Override
+    public Map<Long, Integer> countByPostIds(List<Long> postIds) {
+        if (postIds == null || postIds.isEmpty()) return Map.of();
+
+        String sql = """
+            SELECT post_id, COUNT(*) AS cnt
+            FROM comments
+            WHERE post_id IN (:ids)
+            GROUP BY post_id
+            """;
+
+        MapSqlParameterSource params = new MapSqlParameterSource("ids", postIds);
+
+        return jdbc.query(sql, params, rs -> {
+            Map<Long, Integer> m = new HashMap<>();
+            while (rs.next()) m.put(
+                    rs.getLong("post_id"),
+                    rs.getInt("cnt")
+            );
+            return m;
+        });
     }
 }

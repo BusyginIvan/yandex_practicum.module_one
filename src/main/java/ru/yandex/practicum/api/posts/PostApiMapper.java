@@ -11,12 +11,10 @@ import ru.yandex.practicum.domain.PostPage;
 public interface PostApiMapper {
 
     @Mapping(target = "tags", expression = "java(java.util.List.of())") // TODO: load tags
-    @Mapping(target = "commentsCount", constant = "0")                  // TODO: load commentsCount
     PostDto toPostDto(Post post);
 
     @Mapping(target = "text", expression = "java(PostApiMapper.previewText(post.text()))")
     @Mapping(target = "tags", expression = "java(java.util.List.of())") // TODO: load tags
-    @Mapping(target = "commentsCount", constant = "0")                  // TODO: load commentsCount
     PostDto toPostPreviewDto(Post post);
 
     default PostsPageResponse toPostsPageResponse(PostPage page) {

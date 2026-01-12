@@ -1,25 +1,38 @@
 package ru.yandex.practicum.service;
 
+import org.springframework.stereotype.Service;
 import ru.yandex.practicum.domain.Post;
 import ru.yandex.practicum.domain.PostPage;
+import ru.yandex.practicum.entity.posts.PostEntity;
+import ru.yandex.practicum.entity.posts.PostEntityMapper;
 import ru.yandex.practicum.exception.PostNotFoundException;
+import ru.yandex.practicum.repository.comments.CommentRepository;
 import ru.yandex.practicum.repository.posts.PostRepository;
 
 import java.util.List;
-
-import org.springframework.stereotype.Service;
 
 @Service
 public class PostService {
 
     private final PostRepository postRepository;
+    private final CommentRepository commentRepository;
+    private final PostEntityMapper postEntityMapper;
 
-    public PostService(PostRepository postRepository) {
+    public PostService(
+            PostRepository postRepository,
+            CommentRepository commentRepository,
+            PostEntityMapper postEntityMapper
+    ) {
         this.postRepository = postRepository;
+        this.commentRepository = commentRepository;
+        this.postEntityMapper = postEntityMapper;
     }
 
     public Post getById(long id) {
-        return postRepository.findById(id).orElseThrow(() -> new PostNotFoundException(id));
+        PostEntity postEntity = postRepository.findById(id)
+                .orElseThrow(() -> new PostNotFoundException(id));
+        int commentsCount = commentRepository.countByPostId(id);
+        return postEntityMapper.toPost(postEntity, commentsCount);
     }
 
     public Post create(String title, String text) {
@@ -45,11 +58,20 @@ public class PostService {
 
         if (pageNumber > lastPage) pageNumber = lastPage;
         int offset = (pageNumber - 1) * pageSize;
-        List<Post> page = postRepository.searchPage(search, offset, pageSize);
+        List<PostEntity> postEntities = postRepository.searchPage(search, offset, pageSize);
+
+        List<Long> postIds = postEntities.stream().map(PostEntity::id).toList();
+        var commentCounts = commentRepository.countByPostIds(postIds);
+
+        List<Post> posts = postEntities.stream()
+                .map(postEntity -> postEntityMapper.toPost(
+                        postEntity,
+                        commentCounts.getOrDefault(postEntity.id(), 0))
+                )
+                .toList();
 
         // TODO: подтягивать tags для списка
-        // TODO: подтягивать commentsCount для списка (агрегацией по comments)
 
-        return new PostPage(page, pageNumber, pageSize, lastPage);
+        return new PostPage(posts, pageNumber, pageSize, lastPage);
     }
 }

@@ -4,5 +4,6 @@ public record Post(
         long id,
         String title,
         String text,
-        int likesCount
+        int likesCount,
+        int commentsCount
 ) {}

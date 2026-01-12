@@ -13,12 +13,21 @@ import ru.yandex.practicum.api.posts.dto.PostCreateRequest;
 import ru.yandex.practicum.api.posts.dto.PostDto;
 import ru.yandex.practicum.api.posts.dto.PostUpdateRequest;
 import ru.yandex.practicum.api.posts.dto.PostsPageResponse;
-
-import java.util.List;
+import ru.yandex.practicum.domain.Post;
+import ru.yandex.practicum.domain.PostPage;
+import ru.yandex.practicum.service.PostService;
 
 @RestController
 @RequestMapping("/api/posts")
 public class PostController {
+
+    private final PostService postService;
+    private final PostApiMapper mapper;
+
+    public PostController(PostService postService, PostApiMapper mapper) {
+        this.postService = postService;
+        this.mapper = mapper;
+    }
 
     @GetMapping
     public PostsPageResponse getPosts(
@@ -26,30 +35,30 @@ public class PostController {
             @RequestParam int pageNumber,
             @RequestParam int pageSize
     ) {
-        // TODO: implement
-        return new PostsPageResponse(List.of(), false, false, 1);
+        PostPage page = postService.search(search, pageNumber, pageSize);
+        return mapper.toPostsPageResponse(page);
     }
 
     @GetMapping("/{id}")
     public PostDto getPost(@PathVariable long id) {
-        // TODO: implement
-        return new PostDto(id, "", "", List.of(), 0, 0);
+        Post post = postService.getById(id);
+        return mapper.toPostDto(post);
     }
 
     @PostMapping
     public PostDto createPost(@RequestBody PostCreateRequest request) {
-        // TODO: implement
-        return new PostDto(0L, request.title(), request.text(), request.tags(), 0, 0);
+        Post created = postService.create(request.title(), request.text());
+        return mapper.toPostDto(created);
     }
 
     @PutMapping("/{id}")
     public PostDto updatePost(@PathVariable long id, @RequestBody PostUpdateRequest request) {
-        // TODO: implement
-        return new PostDto(id, request.title(), request.text(), request.tags(), 0, 0);
+        Post updated = postService.update(id, request.title(), request.text());
+        return mapper.toPostDto(updated);
     }
 
     @DeleteMapping("/{id}")
     public void deletePost(@PathVariable long id) {
-        // TODO: implement
+        postService.delete(id);
     }
 }

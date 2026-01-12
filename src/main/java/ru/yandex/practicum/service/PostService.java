@@ -74,4 +74,8 @@ public class PostService {
 
         return new PostPage(posts, pageNumber, pageSize, lastPage);
     }
+
+    public int incrementLikes(long id) {
+        return postRepository.incrementLikes(id);
+    }
 }

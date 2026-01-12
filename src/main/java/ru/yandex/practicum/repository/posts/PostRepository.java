@@ -13,4 +13,6 @@ public interface PostRepository {
 
     List<PostEntity> searchPage(String search, int offset, int limit);
     long countBySearch(String search);
+
+    int incrementLikes(long id);
 }

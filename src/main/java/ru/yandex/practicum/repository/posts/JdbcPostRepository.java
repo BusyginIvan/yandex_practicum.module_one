@@ -1,5 +1,6 @@
 package ru.yandex.practicum.repository.posts;
 
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -101,5 +102,24 @@ public class JdbcPostRepository implements PostRepository {
                 """;
         Long count = jdbc.queryForObject(sql, Map.of("q", search), Long.class);
         return count == null ? 0 : count;
+    }
+
+    @Override
+    public int incrementLikes(long id) {
+        String sql = """
+            UPDATE posts
+            SET likes_count = likes_count + 1,
+                updated_at = now()
+            WHERE id = :id
+            RETURNING likes_count
+            """;
+
+        try {
+            Integer newCount = jdbc.queryForObject(sql, Map.of("id", id), Integer.class);
+            if (newCount == null) throw new IllegalStateException("Failed to increment likes: likes_count is null");
+            return newCount;
+        } catch (EmptyResultDataAccessException e) {
+            throw new PostNotFoundException(id);
+        }
     }
 }

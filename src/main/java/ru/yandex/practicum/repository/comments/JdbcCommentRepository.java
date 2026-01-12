@@ -1,0 +1,85 @@
+package ru.yandex.practicum.repository.comments;
+
+import org.springframework.jdbc.core.RowMapper;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+import org.springframework.stereotype.Repository;
+import ru.yandex.practicum.domain.Comment;
+import ru.yandex.practicum.exception.CommentNotFoundException;
+
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
+@Repository
+public class JdbcCommentRepository implements CommentRepository {
+
+    private static final RowMapper<Comment> ROW_MAPPER = (rs, rowNum) ->
+        new Comment(
+            rs.getLong("id"),
+            rs.getLong("post_id"),
+            rs.getString("text")
+        );
+
+    private final NamedParameterJdbcTemplate jdbc;
+
+    public JdbcCommentRepository(NamedParameterJdbcTemplate jdbc) {
+        this.jdbc = jdbc;
+    }
+
+    @Override
+    public List<Comment> findByPostId(long postId) {
+        String sql = """
+            SELECT id, post_id, text
+            FROM comments
+            WHERE post_id = :postId
+            ORDER BY id ASC
+            """;
+        return jdbc.query(sql, Map.of("postId", postId), ROW_MAPPER);
+    }
+
+    @Override
+    public Optional<Comment> findByPostIdAndId(long postId, long commentId) {
+        String sql = """
+            SELECT id, post_id, text
+            FROM comments
+            WHERE post_id = :postId AND id = :commentId
+            """;
+        return jdbc.query(sql, Map.of("postId", postId, "commentId", commentId), ROW_MAPPER)
+            .stream()
+            .findFirst();
+    }
+
+    @Override
+    public long insert(long postId, String text) {
+        String sql = """
+            INSERT INTO comments (post_id, text)
+            VALUES (:postId, :text)
+            RETURNING id
+            """;
+        Long id = jdbc.queryForObject(sql, Map.of("postId", postId, "text", text), Long.class);
+        if (id == null) throw new IllegalStateException("Failed to insert comment: id is null");
+        return id;
+    }
+
+    @Override
+    public void update(long postId, long commentId, String text) {
+        String sql = """
+            UPDATE comments
+            SET text = :text,
+                updated_at = now()
+            WHERE post_id = :postId AND id = :commentId
+            """;
+        int updated = jdbc.update(sql, Map.of("postId", postId, "commentId", commentId, "text", text));
+        if (updated == 0) throw new CommentNotFoundException(postId, commentId);
+    }
+
+    @Override
+    public void delete(long postId, long commentId) {
+        String sql = """
+            DELETE FROM comments
+            WHERE post_id = :postId AND id = :commentId
+            """;
+        int updated = jdbc.update(sql, Map.of("postId", postId, "commentId", commentId));
+        if (updated == 0) throw new CommentNotFoundException(postId, commentId);
+    }
+}

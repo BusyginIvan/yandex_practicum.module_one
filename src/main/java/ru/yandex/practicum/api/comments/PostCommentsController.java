@@ -11,6 +11,8 @@ import org.springframework.web.bind.annotation.RestController;
 import ru.yandex.practicum.api.comments.dto.CommentCreateRequest;
 import ru.yandex.practicum.api.comments.dto.CommentDto;
 import ru.yandex.practicum.api.comments.dto.CommentUpdateRequest;
+import ru.yandex.practicum.domain.Comment;
+import ru.yandex.practicum.service.CommentService;
 
 import java.util.List;
 
@@ -18,22 +20,33 @@ import java.util.List;
 @RequestMapping("/api/posts/{postId}/comments")
 public class PostCommentsController {
 
+    private final CommentService commentService;
+    private final CommentApiMapper mapper;
+
+    public PostCommentsController(CommentService commentService, CommentApiMapper mapper) {
+        this.commentService = commentService;
+        this.mapper = mapper;
+    }
+
     @GetMapping
-    public List<CommentDto> getComments(@PathVariable String postId) {
-        // TODO: implement
-        return List.of();
+    public List<CommentDto> getComments(@PathVariable("postId") String rawPostId) {
+        Long postId = parsePostIdOrNull(rawPostId);
+        if (postId == null) return List.of();
+        return commentService.getComments(postId).stream()
+                .map(mapper::toDto)
+                .toList();
     }
 
     @GetMapping("/{commentId}")
     public CommentDto getComment(@PathVariable long postId, @PathVariable long commentId) {
-        // TODO: implement
-        return new CommentDto(commentId, "", postId);
+        Comment c = commentService.getComment(postId, commentId);
+        return mapper.toDto(c);
     }
 
     @PostMapping
     public CommentDto addComment(@PathVariable long postId, @RequestBody CommentCreateRequest request) {
-        // TODO: implement
-        return new CommentDto(0L, request.text(), postId);
+        Comment c = commentService.addComment(postId, request.text());
+        return mapper.toDto(c);
     }
 
     @PutMapping("/{commentId}")
@@ -42,12 +55,24 @@ public class PostCommentsController {
             @PathVariable long commentId,
             @RequestBody CommentUpdateRequest request
     ) {
-        // TODO: implement
-        return new CommentDto(commentId, request.text(), postId);
+        Comment c = commentService.updateComment(postId, commentId, request.text());
+        return mapper.toDto(c);
     }
 
     @DeleteMapping("/{commentId}")
     public void deleteComment(@PathVariable long postId, @PathVariable long commentId) {
-        // TODO: implement
+        commentService.deleteComment(postId, commentId);
+    }
+
+    private static Long parsePostIdOrNull(String raw) {
+        if (raw == null) return null;
+        String s = raw.trim();
+        if (s.isEmpty() || s.equalsIgnoreCase("undefined")) return null;
+        try {
+            long v = Long.parseLong(s);
+            return v > 0 ? v : null;
+        } catch (NumberFormatException e) {
+            return null;
+        }
     }
 }

@@ -15,4 +15,7 @@ public interface PostRepository {
     long countBySearch(String search);
 
     int incrementLikes(long id);
+
+    Optional<String> findImageContentType(long id);
+    void updateImageContentType(long id, String type);
 }

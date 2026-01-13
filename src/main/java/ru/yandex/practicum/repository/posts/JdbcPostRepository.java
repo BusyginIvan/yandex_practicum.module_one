@@ -122,4 +122,27 @@ public class JdbcPostRepository implements PostRepository {
             throw new PostNotFoundException(id);
         }
     }
+
+    @Override
+    public Optional<String> findImageContentType(long id) {
+        List<String> result = jdbc.query(
+            "SELECT image_content_type FROM posts WHERE id = :id",
+            Map.of("id", id),
+            (rs, rowNum) -> rs.getString("image_content_type")
+        );
+        if (result.isEmpty()) throw new PostNotFoundException(id);
+        return Optional.ofNullable(result.getFirst());
+    }
+
+    @Override
+    public void updateImageContentType(long id, String type) {
+        String sql = """
+            UPDATE posts
+            SET image_content_type = :type,
+                updated_at = now()
+            WHERE id = :id
+            """;
+        int updated = jdbc.update(sql, Map.of("id", id, "type", type));
+        if (updated == 0) throw new PostNotFoundException(id);
+    }
 }

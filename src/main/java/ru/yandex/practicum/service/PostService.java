@@ -50,7 +50,7 @@ public class PostService {
 
     public Post getById(long id) {
         PostEntity postEntity = postRepository.findById(id)
-                .orElseThrow(() -> new PostNotFoundException(id));
+            .orElseThrow(() -> new PostNotFoundException(id));
         int commentsCount = commentRepository.countByPostId(id);
         List<String> tags = tagRepository.findTagsByPostId(id);
         return postEntityMapper.toPost(postEntity, commentsCount, tags);
@@ -88,12 +88,12 @@ public class PostService {
         Map<Long, List<String>> tagsByPost = tagRepository.findTagsByPostIds(ids);
 
         List<Post> posts = entities.stream()
-                .map(e -> postEntityMapper.toPost(
-                        e,
-                        commentCounts.getOrDefault(e.id(), 0),
-                        tagsByPost.getOrDefault(e.id(), List.of())
-                ))
-                .toList();
+            .map(e -> postEntityMapper.toPost(
+                e,
+                commentCounts.getOrDefault(e.id(), 0),
+                tagsByPost.getOrDefault(e.id(), List.of())
+            ))
+            .toList();
 
         return new PostPage(posts, pageNumber, pageSize, lastPage);
     }

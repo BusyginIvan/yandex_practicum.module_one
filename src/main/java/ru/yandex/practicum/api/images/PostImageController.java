@@ -24,8 +24,8 @@ public class PostImageController {
 
     @PutMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Void> updateImage(
-            @PathVariable long id,
-            @RequestParam("image") MultipartFile image
+        @PathVariable long id,
+        @RequestParam("image") MultipartFile image
     ) {
         postService.updatePostImage(id, image);
         return ResponseEntity.ok().build();
@@ -36,7 +36,7 @@ public class PostImageController {
         ImagePayload payload = postService.getPostImageOrDefault(id);
 
         return ResponseEntity.ok()
-                .contentType(MediaType.parseMediaType(payload.contentType()))
-                .body(payload.bytes());
+            .contentType(MediaType.parseMediaType(payload.contentType()))
+            .body(payload.bytes());
     }
 }

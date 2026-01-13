@@ -108,8 +108,8 @@ public class JdbcCommentRepository implements CommentRepository {
         return jdbc.query(sql, params, rs -> {
             Map<Long, Integer> m = new HashMap<>();
             while (rs.next()) m.put(
-                    rs.getLong("post_id"),
-                    rs.getInt("cnt")
+                rs.getLong("post_id"),
+                rs.getInt("cnt")
             );
             return m;
         });

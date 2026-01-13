@@ -17,12 +17,12 @@ public interface PostApiMapper {
 
     default PostsPageResponse toPostsPageResponse(PostPage page) {
         return new PostsPageResponse(
-                page.posts().stream()
-                        .map(this::toPostPreviewDto)
-                        .toList(),
-                page.hasPrev(),
-                page.hasNext(),
-                page.lastPage()
+            page.posts().stream()
+                .map(this::toPostPreviewDto)
+                .toList(),
+            page.hasPrev(),
+            page.hasNext(),
+            page.lastPage()
         );
     }
 

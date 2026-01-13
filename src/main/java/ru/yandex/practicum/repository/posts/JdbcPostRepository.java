@@ -15,12 +15,13 @@ import java.util.Optional;
 @Repository
 public class JdbcPostRepository implements PostRepository {
 
-    private static final RowMapper<PostEntity> POST_ROW_MAPPER = (rs, rowNum) -> new PostEntity(
+    private static final RowMapper<PostEntity> POST_ROW_MAPPER =
+        (rs, rowNum) -> new PostEntity(
             rs.getLong("id"),
             rs.getString("title"),
             rs.getString("text"),
             rs.getInt("likes_count")
-    );
+        );
 
     private final NamedParameterJdbcTemplate jdbc;
 
@@ -31,10 +32,10 @@ public class JdbcPostRepository implements PostRepository {
     @Override
     public long insert(String title, String text) {
         String sql = """
-                INSERT INTO posts (title, text)
-                VALUES (:title, :text)
-                RETURNING id
-                """;
+            INSERT INTO posts (title, text)
+            VALUES (:title, :text)
+            RETURNING id
+            """;
 
         Long id = jdbc.queryForObject(sql, Map.of("title", title, "text", text), Long.class);
         if (id == null) throw new IllegalStateException("Failed to insert post: id is null");
@@ -44,25 +45,25 @@ public class JdbcPostRepository implements PostRepository {
     @Override
     public Optional<PostEntity> findById(long id) {
         String sql = """
-                SELECT id, title, text, likes_count
-                FROM posts
-                WHERE id = :id
-                """;
+            SELECT id, title, text, likes_count
+            FROM posts
+            WHERE id = :id
+            """;
 
         return jdbc.query(sql, Map.of("id", id), POST_ROW_MAPPER)
-                .stream()
-                .findFirst();
+            .stream()
+            .findFirst();
     }
 
     @Override
     public void update(long id, String title, String text) {
         String sql = """
-                UPDATE posts
-                SET title = :title,
-                    text = :text,
-                    updated_at = now()
-                WHERE id = :id
-                """;
+            UPDATE posts
+            SET title = :title,
+                text = :text,
+                updated_at = now()
+            WHERE id = :id
+            """;
         int updated = jdbc.update(sql, Map.of("id", id, "title", title, "text", text));
         if (updated == 0) throw new PostNotFoundException(id);
     }
@@ -76,17 +77,17 @@ public class JdbcPostRepository implements PostRepository {
 
     @Override
     public List<PostEntity> searchPage(
-            String titleSubstring,
-            List<String> tags,
-            int offset,
-            int limit
+        String titleSubstring,
+        List<String> tags,
+        int offset,
+        int limit
     ) {
         boolean hasTitle = titleSubstring != null && !titleSubstring.isBlank();
         boolean hasTags = tags != null && !tags.isEmpty();
 
         MapSqlParameterSource params = new MapSqlParameterSource()
-                .addValue("offset", offset)
-                .addValue("limit", limit);
+            .addValue("offset", offset)
+            .addValue("limit", limit);
 
         if (hasTitle) {
             params.addValue("titleSubstring", titleSubstring);
@@ -137,8 +138,8 @@ public class JdbcPostRepository implements PostRepository {
         boolean searchByTags = tags != null && !tags.isEmpty();
 
         MapSqlParameterSource params = new MapSqlParameterSource()
-                .addValue("searchByTitle", searchByTitle)
-                .addValue("ts", titleSubstring == null ? "" : titleSubstring);
+            .addValue("searchByTitle", searchByTitle)
+            .addValue("ts", titleSubstring == null ? "" : titleSubstring);
 
         if (!searchByTags) {
             String sql = """

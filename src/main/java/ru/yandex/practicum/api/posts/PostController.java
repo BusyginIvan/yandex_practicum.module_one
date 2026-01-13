@@ -31,9 +31,9 @@ public class PostController {
 
     @GetMapping
     public PostsPageResponse getPosts(
-            @RequestParam String search,
-            @RequestParam int pageNumber,
-            @RequestParam int pageSize
+        @RequestParam String search,
+        @RequestParam int pageNumber,
+        @RequestParam int pageSize
     ) {
         PostPage page = postService.search(search, pageNumber, pageSize);
         return mapper.toPostsPageResponse(page);

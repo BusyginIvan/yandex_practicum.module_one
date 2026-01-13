@@ -22,7 +22,7 @@ public class CommentService {
 
     public Comment getComment(long postId, long commentId) {
         return comments.findByPostIdAndId(postId, commentId)
-                .orElseThrow(() -> new CommentNotFoundException(postId, commentId));
+            .orElseThrow(() -> new CommentNotFoundException(postId, commentId));
     }
 
     public Comment addComment(long postId, String text) {

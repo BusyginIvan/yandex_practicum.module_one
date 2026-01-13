@@ -16,9 +16,9 @@ public class JdbcConfiguration {
 
     @Bean
     public DataSource dataSource(
-            @Value("${db.url}") String url,
-            @Value("${db.username}") String username,
-            @Value("${db.password}") String password
+        @Value("${db.url}") String url,
+        @Value("${db.username}") String username,
+        @Value("${db.password}") String password
     ) {
         DriverManagerDataSource ds = new DriverManagerDataSource();
         ds.setDriverClassName("org.postgresql.Driver");

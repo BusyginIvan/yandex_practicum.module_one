@@ -55,17 +55,17 @@ public class JdbcTagRepository implements TagRepository {
         tags = normalizeTags(tags);
 
         jdbc.update(
-                "DELETE FROM post_tags WHERE post_id = :postId",
-                Map.of("postId", postId)
+            "DELETE FROM post_tags WHERE post_id = :postId",
+            Map.of("postId", postId)
         );
 
         if (tags.isEmpty()) return;
 
         SqlArrayValue tagsSqlArray = new SqlArrayValue("text", tags.toArray());
         MapSqlParameterSource params = new MapSqlParameterSource()
-                .addValue("postId", postId)
-                .addValue("names", tags)
-                .addValue("namesArray", tagsSqlArray);
+            .addValue("postId", postId)
+            .addValue("names", tags)
+            .addValue("namesArray", tagsSqlArray);
 
         String upsertTagsSql = """
             INSERT INTO tags (name)
@@ -87,12 +87,12 @@ public class JdbcTagRepository implements TagRepository {
     private static List<String> normalizeTags(List<String> tags) {
         if (tags == null) return List.of();
         return tags.stream()
-                .filter(Objects::nonNull)
-                .map(String::trim)
-                .filter(s -> !s.isBlank())
-                .map(String::toLowerCase)
-                .distinct()
-                .sorted()
-                .toList();
+            .filter(Objects::nonNull)
+            .map(String::trim)
+            .filter(s -> !s.isBlank())
+            .map(String::toLowerCase)
+            .distinct()
+            .sorted()
+            .toList();
     }
 }

@@ -5,8 +5,6 @@ import java.util.List;
 
 public final class SearchParser {
 
-    private SearchParser() {}
-
     public static SearchQuery parse(String raw) {
         if (raw == null) raw = "";
 
@@ -27,14 +25,14 @@ public final class SearchParser {
 
         String titleSubstring = String.join(" ", titleWords);
         List<String> normalizedTags = tags.stream()
-                .map(String::toLowerCase)
-                .distinct()
-                .sorted()
-                .toList();
+            .map(String::toLowerCase)
+            .distinct()
+            .sorted()
+            .toList();
 
         return new SearchQuery(titleSubstring, normalizedTags);
     }
 
-    public record SearchQuery(String titleSubstring, List<String> tags) {}
+    public record SearchQuery(String titleSubstring, List<String> tags) { }
 }
 

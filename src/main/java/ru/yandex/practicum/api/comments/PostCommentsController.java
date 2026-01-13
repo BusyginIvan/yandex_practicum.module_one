@@ -33,8 +33,8 @@ public class PostCommentsController {
         Long postId = parsePostIdOrNull(rawPostId);
         if (postId == null) return List.of();
         return commentService.getComments(postId).stream()
-                .map(mapper::toDto)
-                .toList();
+            .map(mapper::toDto)
+            .toList();
     }
 
     @GetMapping("/{commentId}")
@@ -51,9 +51,9 @@ public class PostCommentsController {
 
     @PutMapping("/{commentId}")
     public CommentDto updateComment(
-            @PathVariable long postId,
-            @PathVariable long commentId,
-            @RequestBody CommentUpdateRequest request
+        @PathVariable long postId,
+        @PathVariable long commentId,
+        @RequestBody CommentUpdateRequest request
     ) {
         Comment c = commentService.updateComment(postId, commentId, request.text());
         return mapper.toDto(c);

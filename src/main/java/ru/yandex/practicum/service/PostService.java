@@ -13,10 +13,13 @@ import ru.yandex.practicum.exception.InvalidImageContentTypeException;
 import ru.yandex.practicum.exception.PostNotFoundException;
 import ru.yandex.practicum.repository.comments.CommentRepository;
 import ru.yandex.practicum.repository.posts.PostRepository;
+import ru.yandex.practicum.repository.tags.TagRepository;
+import ru.yandex.practicum.service.SearchParser.SearchQuery;
 import ru.yandex.practicum.storage.PostImageStorage;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -24,6 +27,7 @@ public class PostService {
 
     private final PostRepository postRepository;
     private final CommentRepository commentRepository;
+    private final TagRepository tagRepository;
     private final PostEntityMapper postEntityMapper;
     private final PostImageStorage imageStorage;
 
@@ -32,11 +36,13 @@ public class PostService {
     public PostService(
             PostRepository postRepository,
             CommentRepository commentRepository,
+            TagRepository tagRepository,
             PostEntityMapper postEntityMapper,
             PostImageStorage imageStorage
     ) {
         this.postRepository = postRepository;
         this.commentRepository = commentRepository;
+        this.tagRepository = tagRepository;
         this.postEntityMapper = postEntityMapper;
         this.imageStorage = imageStorage;
         this.defaultImagePayload = loadDefaultImage();
@@ -46,18 +52,19 @@ public class PostService {
         PostEntity postEntity = postRepository.findById(id)
                 .orElseThrow(() -> new PostNotFoundException(id));
         int commentsCount = commentRepository.countByPostId(id);
-        return postEntityMapper.toPost(postEntity, commentsCount);
+        List<String> tags = tagRepository.findTagsByPostId(id);
+        return postEntityMapper.toPost(postEntity, commentsCount, tags);
     }
 
-    public Post create(String title, String text) {
+    public Post create(String title, String text, List<String> tags) {
         long id = postRepository.insert(title, text);
-        // TODO: сохранить теги (tags/post_tags) когда появится PostTagRepository
+        tagRepository.replaceTags(id, tags);
         return getById(id);
     }
 
-    public Post update(long id, String title, String text) {
+    public Post update(long id, String title, String text, List<String> tags) {
         postRepository.update(id, title, text);
-        // TODO: обновить теги когда появится PostTagRepository
+        tagRepository.replaceTags(id, tags);
         return getById(id);
     }
 
@@ -66,25 +73,27 @@ public class PostService {
         postRepository.deleteById(id);
     }
 
-    public PostPage search(String search, int pageNumber, int pageSize) {
-        long total = postRepository.countBySearch(search);
-        int lastPage = total == 0 ? 1 : (int) ((total - 1) / pageSize + 1);
+    public PostPage search(String rawSearch, int pageNumber, int pageSize) {
+        SearchQuery q = SearchParser.parse(rawSearch);
 
+        long total = postRepository.countBySearch(q.titleSubstring(), q.tags());
+        int lastPage = total == 0 ? 1 : (int) ((total - 1) / pageSize + 1);
         if (pageNumber > lastPage) pageNumber = lastPage;
         int offset = (pageNumber - 1) * pageSize;
-        List<PostEntity> postEntities = postRepository.searchPage(search, offset, pageSize);
 
-        List<Long> postIds = postEntities.stream().map(PostEntity::id).toList();
-        var commentCounts = commentRepository.countByPostIds(postIds);
+        List<PostEntity> entities = postRepository.searchPage(q.titleSubstring(), q.tags(), offset, pageSize);
+        List<Long> ids = entities.stream().map(PostEntity::id).toList();
 
-        List<Post> posts = postEntities.stream()
-                .map(postEntity -> postEntityMapper.toPost(
-                        postEntity,
-                        commentCounts.getOrDefault(postEntity.id(), 0))
-                )
+        Map<Long, Integer> commentCounts = commentRepository.countByPostIds(ids);
+        Map<Long, List<String>> tagsByPost = tagRepository.findTagsByPostIds(ids);
+
+        List<Post> posts = entities.stream()
+                .map(e -> postEntityMapper.toPost(
+                        e,
+                        commentCounts.getOrDefault(e.id(), 0),
+                        tagsByPost.getOrDefault(e.id(), List.of())
+                ))
                 .toList();
-
-        // TODO: подтягивать tags для списка
 
         return new PostPage(posts, pageNumber, pageSize, lastPage);
     }

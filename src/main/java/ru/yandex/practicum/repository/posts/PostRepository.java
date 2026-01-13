@@ -11,8 +11,8 @@ public interface PostRepository {
     void update(long id, String title, String text);
     void deleteById(long id);
 
-    List<PostEntity> searchPage(String search, int offset, int limit);
-    long countBySearch(String search);
+    List<PostEntity> searchPage(String titleSubstring, List<String> tags, int offset, int limit);
+    int countBySearch(String titleSubstring, List<String> tags);
 
     int incrementLikes(long id);
 

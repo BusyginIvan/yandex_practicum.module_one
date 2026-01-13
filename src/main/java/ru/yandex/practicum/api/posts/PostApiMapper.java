@@ -10,11 +10,9 @@ import ru.yandex.practicum.domain.PostPage;
 @Mapper(componentModel = "spring")
 public interface PostApiMapper {
 
-    @Mapping(target = "tags", expression = "java(java.util.List.of())") // TODO: load tags
     PostDto toPostDto(Post post);
 
     @Mapping(target = "text", expression = "java(PostApiMapper.previewText(post.text()))")
-    @Mapping(target = "tags", expression = "java(java.util.List.of())") // TODO: load tags
     PostDto toPostPreviewDto(Post post);
 
     default PostsPageResponse toPostsPageResponse(PostPage page) {

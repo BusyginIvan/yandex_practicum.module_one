@@ -47,13 +47,13 @@ public class PostController {
 
     @PostMapping
     public PostDto createPost(@RequestBody PostCreateRequest request) {
-        Post created = postService.create(request.title(), request.text());
+        Post created = postService.create(request.title(), request.text(), request.tags());
         return mapper.toPostDto(created);
     }
 
     @PutMapping("/{id}")
     public PostDto updatePost(@PathVariable long id, @RequestBody PostUpdateRequest request) {
-        Post updated = postService.update(id, request.title(), request.text());
+        Post updated = postService.update(id, request.title(), request.text(), request.tags());
         return mapper.toPostDto(updated);
     }
 

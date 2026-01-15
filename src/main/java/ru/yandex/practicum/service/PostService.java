@@ -2,15 +2,16 @@ package ru.yandex.practicum.service;
 
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import ru.yandex.practicum.domain.ImagePayload;
 import ru.yandex.practicum.domain.Post;
 import ru.yandex.practicum.domain.PostPage;
 import ru.yandex.practicum.entity.posts.PostEntity;
 import ru.yandex.practicum.entity.posts.PostEntityMapper;
+import ru.yandex.practicum.exception.not_found.PostNotFoundException;
 import ru.yandex.practicum.exception.validation.ImageRequiredException;
 import ru.yandex.practicum.exception.validation.InvalidImageContentTypeException;
-import ru.yandex.practicum.exception.not_found.PostNotFoundException;
 import ru.yandex.practicum.repository.comments.CommentRepository;
 import ru.yandex.practicum.repository.posts.PostRepository;
 import ru.yandex.practicum.repository.tags.TagRepository;
@@ -21,6 +22,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 @Service
 public class PostService {
@@ -48,29 +50,41 @@ public class PostService {
         this.defaultImagePayload = loadDefaultImage();
     }
 
-    public Post getById(long id) {
-        PostEntity postEntity = postRepository.findById(id)
-            .orElseThrow(() -> new PostNotFoundException(id));
+    public Post getPost(long id) {
+        return getPost(id, () -> new PostNotFoundException(id));
+    }
+
+    private Post getAfterWrite(long id) {
+        return getPost(id, () -> new IllegalStateException(
+            "Post disappeared after write: id=" + id
+        ));
+    }
+
+    private Post getPost(long id, Supplier<? extends RuntimeException> onMissing) {
+        PostEntity postEntity = postRepository.findById(id).orElseThrow(onMissing);
         int commentsCount = commentRepository.countByPostId(id);
         List<String> tags = tagRepository.findTagsByPostId(id);
         return postEntityMapper.toPost(postEntity, commentsCount, tags);
     }
 
+    @Transactional
     public Post create(String title, String text, List<String> tags) {
         long id = postRepository.insert(title, text);
         tagRepository.replaceTags(id, tags);
-        return getById(id);
+        return getAfterWrite(id);
     }
 
+    @Transactional
     public Post update(long id, String title, String text, List<String> tags) {
         postRepository.update(id, title, text);
         tagRepository.replaceTags(id, tags);
-        return getById(id);
+        return getAfterWrite(id);
     }
 
+    @Transactional
     public void delete(long id) {
-        imageStorage.delete(id);
         postRepository.deleteById(id);
+        imageStorage.delete(id);
     }
 
     public PostPage search(String rawSearch, int pageNumber, int pageSize) {
@@ -102,6 +116,7 @@ public class PostService {
         return postRepository.incrementLikes(id);
     }
 
+    @Transactional
     public void updatePostImage(long postId, MultipartFile image) {
         if (image == null || image.isEmpty()) {
             throw new ImageRequiredException();

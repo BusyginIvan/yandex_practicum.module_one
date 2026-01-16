@@ -5,7 +5,7 @@ import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.domain.Comment;
-import ru.yandex.practicum.exception.CommentNotFoundException;
+import ru.yandex.practicum.exception.not_found.CommentNotFoundException;
 
 import java.util.HashMap;
 import java.util.List;

@@ -6,7 +6,7 @@ import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.entity.posts.PostEntity;
-import ru.yandex.practicum.exception.PostNotFoundException;
+import ru.yandex.practicum.exception.not_found.PostNotFoundException;
 
 import java.util.List;
 import java.util.Map;

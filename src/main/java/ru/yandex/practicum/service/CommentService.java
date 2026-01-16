@@ -2,7 +2,7 @@ package ru.yandex.practicum.service;
 
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.domain.Comment;
-import ru.yandex.practicum.exception.CommentNotFoundException;
+import ru.yandex.practicum.exception.not_found.CommentNotFoundException;
 import ru.yandex.practicum.repository.comments.CommentRepository;
 
 import java.util.List;

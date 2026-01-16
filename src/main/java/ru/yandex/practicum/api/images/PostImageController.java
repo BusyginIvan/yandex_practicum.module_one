@@ -1,7 +1,9 @@
 package ru.yandex.practicum.api.images;
 
+import jakarta.validation.constraints.Positive;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -12,6 +14,7 @@ import org.springframework.web.multipart.MultipartFile;
 import ru.yandex.practicum.domain.ImagePayload;
 import ru.yandex.practicum.service.PostService;
 
+@Validated
 @RestController
 @RequestMapping("/api/posts/{id}/image")
 public class PostImageController {
@@ -24,7 +27,7 @@ public class PostImageController {
 
     @PutMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Void> updateImage(
-        @PathVariable long id,
+        @PathVariable @Positive long id,
         @RequestParam("image") MultipartFile image
     ) {
         postService.updatePostImage(id, image);
@@ -32,7 +35,7 @@ public class PostImageController {
     }
 
     @GetMapping
-    public ResponseEntity<byte[]> getImage(@PathVariable long id) {
+    public ResponseEntity<byte[]> getImage(@PathVariable @Positive long id) {
         ImagePayload payload = postService.getPostImageOrDefault(id);
 
         return ResponseEntity.ok()

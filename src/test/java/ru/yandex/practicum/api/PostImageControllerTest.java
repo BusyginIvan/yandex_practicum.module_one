@@ -29,7 +29,7 @@ public class PostImageControllerTest extends AbstractApiTest {
             bytes
         );
 
-        doNothing().when(postService).updatePostImage(1L, file);
+        doNothing().when(postImageService).update(1L, file);
 
         mvc.perform(multipart("/api/posts/1/image")
                 .file(file)
@@ -43,7 +43,7 @@ public class PostImageControllerTest extends AbstractApiTest {
                 .with(req -> { req.setMethod("PUT"); return req; }))
             .andExpect(status().isBadRequest());
 
-        verifyNoInteractions(postService);
+        verifyNoInteractions(postImageService);
     }
 
     @Test
@@ -56,7 +56,7 @@ public class PostImageControllerTest extends AbstractApiTest {
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.name", is("ConstraintViolationException")));
 
-        verifyNoInteractions(postService);
+        verifyNoInteractions(postImageService);
     }
 
     @Test
@@ -69,7 +69,7 @@ public class PostImageControllerTest extends AbstractApiTest {
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.name", is("MethodArgumentTypeMismatchException")));
 
-        verifyNoInteractions(postService);
+        verifyNoInteractions(postImageService);
     }
 
     // ========================= GET /api/posts/{id}/image =========================
@@ -77,7 +77,7 @@ public class PostImageControllerTest extends AbstractApiTest {
     @Test
     void getImage() throws Exception {
         byte[] bytes = new byte[] {1, 2, 3};
-        when(postService.getPostImageOrDefault(7L)).thenReturn(new ImagePayload("image/png", bytes));
+        when(postImageService.getOrDefault(7L)).thenReturn(new ImagePayload("image/png", bytes));
 
         mvc.perform(get("/api/posts/7/image"))
             .andExpect(status().isOk())
@@ -91,7 +91,7 @@ public class PostImageControllerTest extends AbstractApiTest {
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.name", is("ConstraintViolationException")));
 
-        verifyNoInteractions(postService);
+        verifyNoInteractions(postImageService);
     }
 
     @Test
@@ -100,6 +100,6 @@ public class PostImageControllerTest extends AbstractApiTest {
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.name", is("MethodArgumentTypeMismatchException")));
 
-        verifyNoInteractions(postService);
+        verifyNoInteractions(postImageService);
     }
 }

@@ -2,24 +2,17 @@ package ru.yandex.practicum.service;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.mock.web.MockMultipartFile;
-import ru.yandex.practicum.domain.ImagePayload;
 import ru.yandex.practicum.domain.Post;
 import ru.yandex.practicum.domain.PostPage;
 import ru.yandex.practicum.entity.posts.PostEntity;
 import ru.yandex.practicum.exception.not_found.PostNotFoundException;
-import ru.yandex.practicum.exception.validation.ImageRequiredException;
-import ru.yandex.practicum.exception.validation.InvalidImageContentTypeException;
 
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.doNothing;
@@ -208,93 +201,5 @@ public class PostServiceTest extends AbstractServiceTest {
         assertEquals(123, v);
         verify(postRepository).incrementLikes(7L);
         verifyNoInteractions(commentRepository, tagRepository, postImageStorage);
-    }
-
-    // ========================= updatePostImage =========================
-
-    @Test
-    void updatePostImage() throws Exception {
-        byte[] bytes = "img".getBytes(StandardCharsets.UTF_8);
-        var file = new MockMultipartFile("image", "a.png", "image/png", bytes);
-
-        postService.updatePostImage(10L, file);
-
-        verify(postRepository).updateImageContentType(10L, "image/png");
-        verify(postImageStorage).save(10L, bytes);
-        verifyNoInteractions(commentRepository, tagRepository);
-    }
-
-    @Test
-    void updatePostImage_nullImage() {
-        assertThrows(ImageRequiredException.class, () -> postService.updatePostImage(1L, null));
-        verifyNoInteractions(postRepository, commentRepository, tagRepository, postImageStorage);
-    }
-
-    @Test
-    void updatePostImage_emptyImage() {
-        var file = new MockMultipartFile("image", "a.png", "image/png", new byte[0]);
-
-        assertThrows(ImageRequiredException.class, () -> postService.updatePostImage(1L, file));
-
-        verifyNoInteractions(postRepository, commentRepository, tagRepository, postImageStorage);
-    }
-
-    @Test
-    void updatePostImage_nonImageContentType() {
-        var file = new MockMultipartFile("image", "a.txt", "text/plain", "x".getBytes(StandardCharsets.UTF_8));
-
-        assertThrows(InvalidImageContentTypeException.class, () -> postService.updatePostImage(1L, file));
-
-        verifyNoInteractions(postRepository, commentRepository, tagRepository, postImageStorage);
-    }
-
-    // ========================= getPostImageOrDefault =========================
-
-    @Test
-    void getPostImageOrDefault_returnsStoredImage() {
-        byte[] bytes = new byte[] {1, 2, 3};
-
-        when(postRepository.findImageContentType(3L)).thenReturn(Optional.of("image/png"));
-        when(postImageStorage.exists(3L)).thenReturn(true);
-        when(postImageStorage.read(3L)).thenReturn(bytes);
-
-        ImagePayload p = postService.getPostImageOrDefault(3L);
-
-        assertEquals("image/png", p.contentType());
-        assertArrayEquals(bytes, p.bytes());
-
-        verify(postRepository).findImageContentType(3L);
-        verify(postImageStorage).exists(3L);
-        verify(postImageStorage).read(3L);
-        verifyNoMoreInteractions(postImageStorage);
-    }
-
-    @Test
-    void getPostImageOrDefault_contentTypeIsNull() {
-        when(postRepository.findImageContentType(1L)).thenReturn(Optional.empty());
-
-        ImagePayload p = postService.getPostImageOrDefault(1L);
-
-        assertEquals("image/svg+xml", p.contentType());
-        assertNotNull(p.bytes());
-        assertTrue(p.bytes().length > 0);
-
-        verify(postRepository).findImageContentType(1L);
-        verifyNoInteractions(postImageStorage);
-    }
-
-    @Test
-    void getPostImageOrDefault_fileIsMissing() {
-        when(postRepository.findImageContentType(2L)).thenReturn(Optional.of("image/png"));
-        when(postImageStorage.exists(2L)).thenReturn(false);
-
-        ImagePayload p = postService.getPostImageOrDefault(2L);
-
-        assertEquals("image/svg+xml", p.contentType());
-        assertTrue(p.bytes().length > 0);
-
-        verify(postRepository).findImageContentType(2L);
-        verify(postImageStorage).exists(2L);
-        verifyNoMoreInteractions(postImageStorage);
     }
 }

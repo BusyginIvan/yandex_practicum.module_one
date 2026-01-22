@@ -12,17 +12,17 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import ru.yandex.practicum.domain.ImagePayload;
-import ru.yandex.practicum.service.PostService;
+import ru.yandex.practicum.service.PostImageService;
 
 @Validated
 @RestController
 @RequestMapping("/api/posts/{id}/image")
 public class PostImageController {
 
-    private final PostService postService;
+    private final PostImageService postImageService;
 
-    public PostImageController(PostService postService) {
-        this.postService = postService;
+    public PostImageController(PostImageService postImageService) {
+        this.postImageService = postImageService;
     }
 
     @PutMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -30,13 +30,13 @@ public class PostImageController {
         @PathVariable @Positive long id,
         @RequestParam("image") MultipartFile image
     ) {
-        postService.updatePostImage(id, image);
+        postImageService.update(id, image);
         return ResponseEntity.ok().build();
     }
 
     @GetMapping
     public ResponseEntity<byte[]> getImage(@PathVariable @Positive long id) {
-        ImagePayload payload = postService.getPostImageOrDefault(id);
+        ImagePayload payload = postImageService.getOrDefault(id);
 
         return ResponseEntity.ok()
             .contentType(MediaType.parseMediaType(payload.contentType()))

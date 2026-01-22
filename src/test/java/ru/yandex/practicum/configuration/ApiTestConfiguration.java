@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.web.multipart.support.StandardServletMultipartResolver;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import ru.yandex.practicum.service.CommentService;
+import ru.yandex.practicum.service.PostImageService;
 import ru.yandex.practicum.service.PostService;
 
 import static org.mockito.Mockito.mock;
@@ -31,6 +32,11 @@ public class ApiTestConfiguration {
     @Bean
     public PostService postService() {
         return mock(PostService.class);
+    }
+
+    @Bean
+    public PostImageService postImageService() {
+        return mock(PostImageService.class);
     }
 
     @Bean

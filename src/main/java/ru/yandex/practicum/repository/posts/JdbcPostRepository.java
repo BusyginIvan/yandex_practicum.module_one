@@ -76,84 +76,78 @@ public class JdbcPostRepository implements PostRepository {
     }
 
     @Override
-    public List<PostEntity> searchPage(
-        String titleSubstring,
-        List<String> tags,
-        int offset,
-        int limit
-    ) {
-        boolean hasTitle = titleSubstring != null && !titleSubstring.isBlank();
-        boolean hasTags = tags != null && !tags.isEmpty();
+    public List<PostEntity> searchPage(String titleSubstring, List<String> tags, int offset, int limit) {
+        titleSubstring = titleSubstring == null || titleSubstring.isBlank() ? "" : titleSubstring;
 
-        MapSqlParameterSource params = new MapSqlParameterSource()
-            .addValue("offset", offset)
-            .addValue("limit", limit);
+        return tags == null || tags.isEmpty()
+            ? searchByTitle(titleSubstring, offset, limit)
+            : searchByTitleAndTags(titleSubstring, tags, offset, limit);
+    }
 
-        if (hasTitle) {
-            params.addValue("titleSubstring", titleSubstring);
-        }
-        if (hasTags) {
-            params.addValue("tags", tags);
-            params.addValue("tagCount", tags.size());
-        }
-
-        StringBuilder sql = new StringBuilder("""
+    private List<PostEntity> searchByTitle(String ts, int offset, int limit) {
+        String sql = """
             SELECT p.id, p.title, p.text, p.likes_count
             FROM posts p
-            """);
-
-        if (hasTags) sql.append("""
-            JOIN post_tags pt ON pt.post_id = p.id
-            JOIN tags t ON t.id = pt.tag_id
-            """);
-
-        sql.append("WHERE 1=1\n");
-
-        if (hasTitle) sql.append("""
-            AND lower(p.title) LIKE '%' || lower(:titleSubstring) || '%'
-            """);
-
-        if (hasTags) sql.append("""
-            AND t.name IN (:tags)
-            """);
-
-        if (hasTags) sql.append("""
-            GROUP BY p.id
-            HAVING COUNT(t.name) = :tagCount
-            """);
-
-        sql.append("""
+            WHERE (:ts = '' OR lower(p.title) LIKE '%' || lower(:ts) || '%')
             ORDER BY p.id DESC
             OFFSET :offset
             LIMIT :limit
-            """);
+            """;
 
-        return jdbc.query(sql.toString(), params, POST_ROW_MAPPER);
+        var params = new MapSqlParameterSource()
+            .addValue("ts", ts)
+            .addValue("offset", offset)
+            .addValue("limit", limit);
+
+        return jdbc.query(sql, params, POST_ROW_MAPPER);
     }
 
+    private List<PostEntity> searchByTitleAndTags(String ts, List<String> tags, int offset, int limit) {
+        String sql = """
+            SELECT p.id, p.title, p.text, p.likes_count
+            FROM posts p
+            JOIN post_tags pt ON pt.post_id = p.id
+            JOIN tags t ON t.id = pt.tag_id
+            WHERE (:ts = '' OR lower(p.title) LIKE '%' || lower(:ts) || '%')
+              AND t.name IN (:tags)
+            GROUP BY p.id
+            HAVING COUNT(*) = :tagCount
+            ORDER BY p.id DESC
+            OFFSET :offset
+            LIMIT :limit
+            """;
+
+        var params = new MapSqlParameterSource()
+            .addValue("ts", ts)
+            .addValue("tags", tags)
+            .addValue("tagCount", tags.size())
+            .addValue("offset", offset)
+            .addValue("limit", limit);
+
+        return jdbc.query(sql, params, POST_ROW_MAPPER);
+    }
 
     @Override
     public int countBySearch(String titleSubstring, List<String> tags) {
-        boolean searchByTitle = titleSubstring != null && !titleSubstring.isBlank();
-        boolean searchByTags = tags != null && !tags.isEmpty();
+        titleSubstring = titleSubstring == null || titleSubstring.isBlank() ? "" : titleSubstring;
 
-        MapSqlParameterSource params = new MapSqlParameterSource()
-            .addValue("searchByTitle", searchByTitle)
-            .addValue("ts", titleSubstring == null ? "" : titleSubstring);
+        return tags == null || tags.isEmpty()
+            ? countByTitle(titleSubstring)
+            : countByTitleAndTags(titleSubstring, tags);
+    }
 
-        if (!searchByTags) {
-            String sql = """
-                SELECT COUNT(*)
-                FROM posts
-                WHERE (:searchByTitle = false OR lower(title) LIKE '%' || lower(:ts) || '%')
-                """;
-            Integer c = jdbc.queryForObject(sql, params, Integer.class);
-            return c == null ? 0 : c;
-        }
+    private int countByTitle(String ts) {
+        String sql = """
+            SELECT COUNT(*)
+            FROM posts p
+            WHERE (:ts = '' OR lower(p.title) LIKE '%' || lower(:ts) || '%')
+            """;
 
-        params.addValue("tags", tags);
-        params.addValue("tagCount", tags.size());
+        Integer c = jdbc.queryForObject(sql, Map.of("ts", ts), Integer.class);
+        return c == null ? 0 : c;
+    }
 
+    private int countByTitleAndTags(String ts, List<String> tags) {
         String sql = """
             SELECT COUNT(*)
             FROM (
@@ -161,12 +155,18 @@ public class JdbcPostRepository implements PostRepository {
                 FROM posts p
                 JOIN post_tags pt ON pt.post_id = p.id
                 JOIN tags t ON t.id = pt.tag_id
-                WHERE (:searchByTitle = false OR lower(p.title) LIKE '%' || lower(:ts) || '%')
+                WHERE (:ts = '' OR lower(p.title) LIKE '%' || lower(:ts) || '%')
                   AND t.name IN (:tags)
                 GROUP BY p.id
-                HAVING COUNT(t.name) = :tagCount
+                HAVING COUNT(*) = :tagCount
             ) x
             """;
+
+        var params = new MapSqlParameterSource()
+            .addValue("ts", ts)
+            .addValue("tags", tags)
+            .addValue("tagCount", tags.stream().distinct().count());
+
         Integer c = jdbc.queryForObject(sql, params, Integer.class);
         return c == null ? 0 : c;
     }

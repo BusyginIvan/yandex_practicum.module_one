@@ -1,6 +1,7 @@
 package ru.yandex.practicum.storage;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -10,11 +11,12 @@ import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 
 @Service
+@Profile("!test")
 public class FileSystemPostImageStorage implements PostImageStorage {
 
     private final Path imagesDir;
 
-    public FileSystemPostImageStorage(@Value("${storage.imagesDir}") String imagesDir) {
+    public FileSystemPostImageStorage(@Value("${IMAGES_DIR}") String imagesDir) {
         this.imagesDir = Paths.get(imagesDir);
     }
 

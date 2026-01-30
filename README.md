@@ -1,18 +1,22 @@
 # Blog Backend
 
-Бэкенд веб-приложения блога, реализованный на **Java 21** с использованием **Spring Framework 6.x** (без Spring Boot).  
+Бэкенд веб-приложения блога, реализованный на **Java 21** с использованием **Spring Boot 4.x**.  
 Проект предоставляет REST API для управления постами, комментариями, лайками и изображениями постов.
 
 ## Стек технологий
 
 - Java 21
-- Spring Framework 6.x (Web MVC, JDBC, Validation)
-- Apache Tomcat 10.1
+- Spring Boot 4.x
+    - Spring Web (MVC)
+    - Spring JDBC
+    - Spring Validation
+    - Spring Test
 - PostgreSQL 16
-- Maven
+- Gradle
 - MapStruct
 - Jackson
-- JUnit 5, Spring Test Framework, Mockito
+- JUnit 5
+- Mockito
 - Testcontainers (PostgreSQL)
 - Docker / Docker Compose
 
@@ -43,13 +47,17 @@
 - Работа с файловой системой для хранения изображений постов
 - Скрытие деталей хранения от доменного слоя
 
-### Конфигурация приложения (`configuration`)
+### Конфигурация приложения
 
-- Web MVC
-- JDBC и транзакции
-- Валидация
-- CORS
-- Загрузка и разрешение property-файлов
+- Автоконфигурация Spring Boot
+- Явные Java-конфигурации там, где это необходимо
+- Использование `application.yaml`
+- Профили Spring (`test`, default)
+
+## Профили
+
+- `default` — файловое хранилище изображений
+- `test` — in-memory хранилище изображений
 
 ## Структура базы данных
 
@@ -131,18 +139,33 @@
 
 ## Тестирование
 
-- JUnit 5
-- Spring Test Framework
-- MockMvc (MVC-тесты)
-- Mockito
-- Testcontainers (PostgreSQL)
+В проекте используются разные типы тестов с чётким разделением ответственности:
 
-Покрыты:
-- REST-контроллеры
-- Сервисы
-- DAO (репозитории)
+### Service-тесты (сервисный слой)
 
-Контексты тестов кешируются для ускорения прогона.
+- JUnit 5 + Mockito (моки как Spring-бины)
+- Spring Test Context: `@SpringJUnitConfig(ServiceTestConfiguration.class)`
+- Тестирование бизнес-логики сервисов
+- Без Spring Boot (не поднимается автоконфигурация, веб и БД)
+
+### Repository-тесты
+
+- `@DataJdbcTest`
+- PostgreSQL через Testcontainers
+- Реальные SQL-запросы
+- Embedded-БД отключена: `@AutoConfigureTestDatabase(replace = Replace.NONE)`
+
+### API-тесты
+
+- `@WebMvcTest`
+- MockMvc
+- Моки сервисов через `@MockitoBean`
+
+### End-to-End тесты
+
+- `@SpringBootTest` + `@AutoConfigureMockMvc`
+- PostgreSQL через Testcontainers
+- Проверка работы приложения целиком (web → service → repository → db)
 
 ## Сборка и запуск через Docker
 
@@ -156,12 +179,14 @@ docker compose up --build
 * PostgreSQL будет доступен на `localhost:5432`
 * Приложение — на `http://localhost:8080`
 
+Приложение собирается в executable JAR и запускается со встроенным веб-сервером Spring Boot.
 Изображения постов сохраняются в Docker volume.
 
 ## Особенности реализации
 
-* Spring Framework **без Spring Boot**
-* Явная конфигурация через Java Config и `web.xml`
-* Явные SQL-запросы без ORM
-* MapStruct для маппинга
-* Файловое хранилище изображений
+- Spring Boot приложение со встроенным веб-сервером
+- Executable JAR
+- Явные SQL-запросы без ORM
+- MapStruct для маппинга DTO ↔ domain ↔ entity
+- Файловое хранилище изображений с альтернативной in-memory реализацией для тестов
+- Использование профилей Spring для тестовой конфигурации

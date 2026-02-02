@@ -169,18 +169,49 @@
 
 ## Сборка и запуск через Docker
 
-1. Создать файл `.env` на основе `.env.example`
-2. Запустить:
+### Первый запуск
+
+1. **Создать файл окружения**
+
+Создайте файл `.env` на основе `.env.example`:
 
 ```bash
-docker compose up --build
+cp .env.example .env
 ```
 
-* PostgreSQL будет доступен на `localhost:5432`
-* Приложение — на `http://localhost:8080`
+2. **Запустить PostgreSQL**
 
-Приложение собирается в executable JAR и запускается со встроенным веб-сервером Spring Boot.
+```bash
+docker compose up -d db
+```
+
+3. **Инициализировать схему базы данных**
+
+```bash
+docker compose exec db psql -U blog_user -d blog -f /schema.sql
+```
+
+4. **Запустить приложение**
+
+```bash
+docker compose up --build -d web
+```
+
+После запуска:
+
+- PostgreSQL доступен на `localhost:5432`
+- Приложение доступно на `http://localhost:8080`
+
+Приложение собирается в **executable JAR** и запускается со встроенным веб-сервером Spring Boot.
 Изображения постов сохраняются в Docker volume.
+
+### Повторный запуск
+
+Для повторного запуска, пересборки приложения:
+
+```bash
+docker compose up --build -d
+```
 
 ## Особенности реализации
 

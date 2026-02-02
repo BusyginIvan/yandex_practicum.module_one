@@ -8,3 +8,6 @@ spring:
   sql.init:
     mode: always
     schema-locations: classpath:schema.sql
+  servlet.multipart:
+    max-file-size: 5MB
+    max-request-size: 5MB

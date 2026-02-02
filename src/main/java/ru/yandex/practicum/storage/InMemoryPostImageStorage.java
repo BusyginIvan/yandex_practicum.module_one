@@ -1,8 +1,13 @@
 package ru.yandex.practicum.storage;
 
+import org.springframework.context.annotation.Profile;
+import org.springframework.stereotype.Service;
+
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+@Service
+@Profile("test")
 public class InMemoryPostImageStorage implements PostImageStorage {
 
     private final Map<Long, byte[]> storage = new ConcurrentHashMap<>();

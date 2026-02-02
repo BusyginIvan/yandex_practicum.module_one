@@ -11,10 +11,11 @@ services:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+      - ./src/main/resources/schema.sql:/schema.sql
 
   web:
-    container_name: blog-tomcat
-    image: blog-tomcat
+    container_name: blog-app
+    image: blog-app
     build:
       context: .
       dockerfile: Dockerfile

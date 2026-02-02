@@ -1,0 +1,13 @@
+spring:
+  application.name: blog-backend
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+  sql.init.mode: never
+  servlet.multipart:
+    max-file-size: 5MB
+    max-request-size: 5MB
+storage:
+  images-dir: ${IMAGES_DIR:/var/blog/images}

@@ -1,4 +1,4 @@
 .idea/
-.mvn/
-target/
+.gradle/
+build/
 .env

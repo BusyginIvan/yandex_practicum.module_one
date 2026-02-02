@@ -1,8 +1,8 @@
 package ru.yandex.practicum.configuration;
 
+import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.Configuration;
 import ru.yandex.practicum.repository.comments.CommentRepository;
 import ru.yandex.practicum.repository.posts.PostRepository;
 import ru.yandex.practicum.repository.tags.TagRepository;
@@ -10,7 +10,7 @@ import ru.yandex.practicum.storage.PostImageStorage;
 
 import static org.mockito.Mockito.mock;
 
-@Configuration
+@TestConfiguration
 @ComponentScan(
     basePackages = {
         "ru.yandex.practicum.service",

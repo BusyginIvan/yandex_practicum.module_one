@@ -11,3 +11,5 @@ spring:
   servlet.multipart:
     max-file-size: 5MB
     max-request-size: 5MB
+storage:
+  images-dir: ${IMAGES_DIR:/var/blog/images}

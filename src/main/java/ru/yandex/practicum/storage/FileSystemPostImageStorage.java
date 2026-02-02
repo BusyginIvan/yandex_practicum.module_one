@@ -16,7 +16,7 @@ public class FileSystemPostImageStorage implements PostImageStorage {
 
     private final Path imagesDir;
 
-    public FileSystemPostImageStorage(@Value("${IMAGES_DIR}") String imagesDir) {
+    public FileSystemPostImageStorage(@Value("${storage.images-dir}") String imagesDir) {
         this.imagesDir = Paths.get(imagesDir);
     }
 

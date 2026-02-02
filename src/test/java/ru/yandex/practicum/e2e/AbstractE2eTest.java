@@ -1,6 +1,6 @@
 package ru.yandex.practicum.e2e;
 
-import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
@@ -23,7 +23,7 @@ public abstract class AbstractE2eTest {
     @Autowired protected NamedParameterJdbcTemplate jdbc;
     @Autowired protected InMemoryPostImageStorage postImageStorage;
 
-    @AfterEach
+    @BeforeEach
     void beforeEach() {
         jdbc.getJdbcTemplate().execute("""
             TRUNCATE TABLE
